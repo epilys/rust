@@ -1377,6 +1377,15 @@ impl File {
             }
         }
     }
+
+    #[cfg(not(target_os = "fuchsia"))]
+    pub fn null(opts: &OpenOptions) -> io::Result<Self> {
+        use crate::ffi::CStr;
+        use crate::sys::unix::DEV_NULL;
+
+        let path = unsafe { CStr::from_ptr(DEV_NULL.as_ptr() as *const _) };
+        Self::open_c(&path, opts)
+    }
 }
 
 impl DirBuilder {

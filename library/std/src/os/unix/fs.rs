@@ -412,6 +412,9 @@ pub trait OpenOptionsExt {
     /// ```
     #[stable(feature = "open_options_ext", since = "1.10.0")]
     fn custom_flags(&mut self, flags: i32) -> &mut Self;
+    #[cfg(not(target_os = "fuchsia"))]
+    #[stable(feature = "open_options_ext", since = "1.10.0")]
+    fn null(&self) -> io::Result<fs::File>;
 }
 
 #[stable(feature = "fs_ext", since = "1.1.0")]
@@ -424,6 +427,11 @@ impl OpenOptionsExt for OpenOptions {
     fn custom_flags(&mut self, flags: i32) -> &mut OpenOptions {
         self.as_inner_mut().custom_flags(flags);
         self
+    }
+
+    #[cfg(not(target_os = "fuchsia"))]
+    fn null(&self) -> io::Result<fs::File> {
+        Ok(fs::File::from_inner(crate::sys::fs::File::null(self.as_inner())?))
     }
 }
 
