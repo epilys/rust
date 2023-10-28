@@ -20,18 +20,6 @@ use crate::sys::fs::OpenOptions;
 
 use libc::{c_char, c_int, gid_t, pid_t, uid_t, EXIT_FAILURE, EXIT_SUCCESS};
 
-cfg_if::cfg_if! {
-    if #[cfg(target_os = "fuchsia")] {
-        // fuchsia doesn't have /dev/null
-    } else if #[cfg(target_os = "redox")] {
-        const DEV_NULL: &str = "null:\0";
-    } else if #[cfg(target_os = "vxworks")] {
-        const DEV_NULL: &str = "/null\0";
-    } else {
-        const DEV_NULL: &str = "/dev/null\0";
-    }
-}
-
 // Android with api less than 21 define sig* functions inline, so it is not
 // available for dynamic link. Implementing sigemptyset and sigaddset allow us
 // to support older Android version (independent of libc version).
@@ -478,6 +466,8 @@ impl Stdio {
 
             #[cfg(not(target_os = "fuchsia"))]
             Stdio::Null => {
+                use crate::sys::unix::DEV_NULL;
+
                 let mut opts = OpenOptions::new();
                 opts.read(readable);
                 opts.write(!readable);
